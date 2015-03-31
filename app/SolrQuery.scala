@@ -5,14 +5,15 @@ import java.net.URLEncoder
 import dst.solr.filter._
 
 case class SolrQuery(
-  searchString:   Option[String]     = None,
-  searchFilter:   Option[SolrFilter] = None,
-  filters:        List[SolrFilter]   = List(),
-  page:           SolrPage           = SolrPage(),
-  facetMinCount:  Int                = -1,
-  facetFields:    List[String]       = List(),
-  groupField:     Option[String]     = None,
-  statsFields:    List[String]       = List()
+  searchString:   Option[String]      = None,
+  searchFilter:   Option[SolrFilter]  = None,
+  filters:        List[SolrFilter]    = List(),
+  page:           SolrPage            = SolrPage(),
+  facetMinCount:  Int                 = -1,
+  facetFields:    List[String]        = List(),
+  groupField:     Option[String]      = None,
+  groupSortFunction:   Option[String]      = None,
+  statsFields:    List[String]        = List()
 ) {
   private def statsParameters: String = {
     if (!statsFields.isEmpty) {
@@ -21,8 +22,12 @@ case class SolrQuery(
     else ""
   }
 
-  private def groupParameters: String =
-    groupField.fold("")(field => "&fq=" + URLEncoder.encode("{!collapse field=%s}".format(field), "UTF-8"))
+  private def groupParameters: String = groupField.fold("") { field =>
+    groupSortFunction match {
+      case Some(function) => "&fq=" + URLEncoder.encode(s"{!collapse field=${field} $function}", "UTF-8");
+      case None           => "&fq=" + URLEncoder.encode(s"{!collapse field=${field}}", "UTF-8")
+    }
+  }
 
   private def facetParameters: String = {
     if (!facetFields.isEmpty) {
@@ -46,6 +51,6 @@ case class SolrQuery(
 
   def withPaging(page: SolrPage) = copy(page = page)
   def withStatsFor(fields: List[String]) = copy(statsFields = fields)
-  def groupBy(field: Option[String]) = copy(groupField = field)
   def withFacets(fields: List[String], minCount: Int = -1) = copy(facetFields = fields, facetMinCount = minCount)
+  def groupBy(field: Option[String], sortFunction: Option[String]) = copy(groupField = field, groupSortFunction = sortFunction)
 }
