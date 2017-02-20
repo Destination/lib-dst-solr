@@ -22,5 +22,5 @@ case class SolrPage(
   pageSize: Option[Int]      = None,
   methods:  List[SortMethod] = List()
 ) {
-  override def toString = methods.map { _ }.mkString("&sort=", ",", "") + "&start=%d&rows=%d".format((page.getOrElse(1) - 1)*pageSize.getOrElse(20), pageSize.getOrElse(20))
+  override def toString = methods.mkString("&sort=", ",", "") + "&start=%d&rows=%d".format((page.getOrElse(1) - 1)*pageSize.getOrElse(20), pageSize.getOrElse(20))
 }
